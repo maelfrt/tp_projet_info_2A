@@ -1,7 +1,9 @@
 import os
-import secrets
+from datetime import datetime
 
 from fastapi import HTTPException
+from game import Game
+from game_mode import CoinFlipMode, DiceMode, GameModeFactory
 
 from dao.player_dao import PlayerDao
 from utils.log_utils import log
@@ -11,12 +13,12 @@ class GameService:
     """Service that manages games."""
 
     @log
-    def play(self, id_player: int, id_opponent: int, choice="heads"):
-        """Executes a single round of a coin-flip game between two players.
+    def play(self, id_player: int, id_opponent: int, game_mode: str, **kwargs):
+        """Executes a single round of a coin-flip or dice game between two players.
         Args:
             id_player (int): The unique identifier of the first player.
             id_opponent (int): The unique identifier of the opponent.
-            choice (str, optional): The player's choice ('heads' or 'tails'). Defaults to "heads".
+            game_mode (str): The game played.
         Returns:
             dict: A dictionary containing the match details and new elo
         Raises:
@@ -32,22 +34,28 @@ class GameService:
         if not p1 or not p2:
             raise HTTPException(status_code=404, detail="Player not found")
 
-        result = secrets.choice(["heads", "tails"])
-        winner = p1 if result == choice else p2
+        mode = GameModeFactory.get_mode(game_mode)
+        if mode == "dice":
+            DiceMode.play(p1, p2)
+            winner = DiceMode.play(p1, p2)["winner"]
+        elif mode == "coinflip":
+            CoinFlipMode.play(p1, p2, self.choice)
+            winner = CoinFlipMode.play(p1, p2, self.choice)["winner"]
 
         self.update_player_ratings(p1, p2, winner)
 
         PlayerDao().update(p1)
         PlayerDao().update(p2)
 
-        return {
-            "player1": p1.username,
-            "player2": p2.username,
-            "description": result,
-            "winner": winner.username,
-            "new_elo1": p1.elo,
-            "new_elo2": p2.elo,
-        }
+        return Game(
+            None,
+            p1,
+            p2,
+            game_mode,
+            winner,
+            "",
+            datetime.now()
+        )
 
     @classmethod
     def calculate_expected_score(cls, elo_a, elo_b) -> float:
