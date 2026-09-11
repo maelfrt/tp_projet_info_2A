@@ -7,12 +7,21 @@ from utils.security import verify_token
 
 router = APIRouter()
 
+
 logger = get_logger(__name__)
 
 
 def get_game_service():
     """Dependency provider for GameService."""
     return GameService()
+
+
+@router.get("/", tags=["Games"])
+async def get_mock_games(id_player):
+    return [
+        {"id_game": 1, "mode": "coinflip", "winner": "Miguel"},
+        {"id_game": 2, "mode": "dice", "winner": "Batricia"}
+    ]
 
 
 @router.post("/", response_model=GameResponse, tags=["Games"])
