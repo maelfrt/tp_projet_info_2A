@@ -20,3 +20,4 @@ print(g2)
 
 print(f"{g2.player1.username} : new elo -> {g2.player1.elo}")
 print(f"{g2.player2.username} : new elo -> {g2.player2.elo}")
+

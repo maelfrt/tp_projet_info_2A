@@ -36,3 +36,5 @@ class PlayerReadModel(BaseModel):
 class PlayerLoginModel(BaseModel):
     username: str
     password: str
+
+

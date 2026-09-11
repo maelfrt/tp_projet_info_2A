@@ -5,6 +5,8 @@ from service.game_service import GameService
 from utils.log_utils import get_logger
 from utils.security import verify_token
 
+from schema.game_model import GamePlayModel, GameReadModel, GameResponse
+
 router = APIRouter()
 
 logger = get_logger(__name__)
@@ -41,3 +43,28 @@ def play_game(
         new_elo1=game.player1.elo,
         new_elo2=game.player2.elo,
     )
+
+#@router.get("/", tags=["Games"])
+#async def get_mock_games(id_player: int = None):
+    #return [
+        #{"id_game": 1, "mode": "coinflip", "winner": "Miguel", "id_player": id_player},
+        #{"id_game": 2, "mode": "dice", "winner": "Batricia", "id_player": id_player}
+    #]
+@router.get("/", response_model=list[GameReadModel], tags=["Games"])
+def get_games_by_player(
+    id_player: int,
+    game_mode: str = None,
+    game_service=Depends(get_game_service),
+    current_player=Depends(verify_token),
+):
+    """Lists all games played by a specific player.
+    Args:
+        id_player (int): The unique identifier of the player.
+        game_mode (str, optional): Filter by game mode (e.g. "coinflip", "dice").
+        game_service (GameService): Service handling game logic.
+        current_player (Player): The authenticated user (via X-Auth-Token header).
+    Returns:
+        list[GameReadModel]: All games the player participated in, optionally filtered by mode.
+    """
+    logger.info(f"Get games for player {id_player}")
+    return game_service.find_all_by_player(id_player, game_mode)
