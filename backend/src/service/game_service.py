@@ -4,6 +4,7 @@ from business_object.game_mode.game_mode_factory import GameModeFactory
 from business_object.scoring_strategy import ScoringStrategy
 from dao.player_dao import PlayerDao
 from utils.log_utils import log
+from dao.game_dao import GameDao
 
 
 class GameService:
