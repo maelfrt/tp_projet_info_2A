@@ -2,6 +2,8 @@ from fastapi import HTTPException
 
 from business_object.game_mode.game_mode_factory import GameModeFactory
 from business_object.scoring_strategy import ScoringStrategy
+from business_object.game import Game
+from dao.game_dao import GameDao
 from dao.player_dao import PlayerDao
 from utils.log_utils import log
 
@@ -40,4 +42,34 @@ class GameService:
         PlayerDao().update(p1)
         PlayerDao().update(p2)
 
+        GameDao().create(game)
+
         return game
+
+    @log
+    def find_by_id(self, id_game: int) -> Game:
+        """Retrieves a game by its id.
+        Args:
+            id_game (int): The unique identifier of the game.
+        Returns:
+            Game: the game matching the given id, or None if not found.
+        """
+        return GameDao().find_by_id(id_game)
+
+    @log
+    def find_all_by_player(self, id_player: int, game_mode: str = None) -> list[Game]:
+        """Retrieves all games played by a specific player, optionally
+        filtered by game mode.
+        Args:
+            id_player (int): The unique identifier of the player.
+            game_mode (str, optional): If provided, only games of this mode
+                are returned. If None, all games are returned regardless of mode.
+        Returns:
+            list[Game]: games involving this player.
+        """
+        games = GameDao().find_all_by_player(id_player)
+
+        if game_mode is not None:
+            games = [g for g in games if g.game_mode == game_mode]
+
+        return games
